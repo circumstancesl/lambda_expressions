@@ -25,7 +25,7 @@ public class BinaryTree<T> : IEnumerable<T>
 
     public IEnumerator<T> GetEnumerator()
     {
-        return InOrderTraversal().GetEnumerator();
+        return PreOrderTraversal().GetEnumerator();
     }
 
     IEnumerator IEnumerable.GetEnumerator()
@@ -33,24 +33,58 @@ public class BinaryTree<T> : IEnumerable<T>
         return GetEnumerator();
     }
 
-    private IEnumerable<T> InOrderTraversal()
+    public IEnumerable<T> PreOrderTraversal()
+    {
+        if (root == null) yield break;
+
+        Stack<BinaryTreeNode<T>> stack = new Stack<BinaryTreeNode<T>>();
+        stack.Push(root);
+
+        while (stack.Count > 0)
+        {
+            BinaryTreeNode<T> current = stack.Pop();
+            yield return current.Value;
+
+            if (current.Right != null)
+            {
+                stack.Push(current.Right);
+            }
+
+            if (current.Left != null)
+            {
+                stack.Push(current.Left);
+            }
+        }
+    }
+
+    public IEnumerable<T> PostOrderTraversal()
     {
         if (root == null) yield break;
 
         Stack<BinaryTreeNode<T>> stack = new Stack<BinaryTreeNode<T>>();
         BinaryTreeNode<T> current = root;
+        BinaryTreeNode<T> lastNodeVisited = null;
 
         while (stack.Count > 0 || current != null)
         {
-            while (current != null)
+            if (current != null)
             {
                 stack.Push(current);
                 current = current.Left;
             }
-
-            current = stack.Pop();
-            yield return current.Value;
-            current = current.Right;
+            else
+            {
+                BinaryTreeNode<T> peekNode = stack.Peek();
+                if (peekNode.Right != null && lastNodeVisited != peekNode.Right)
+                {
+                    current = peekNode.Right;
+                }
+                else
+                {
+                    yield return peekNode.Value;
+                    lastNodeVisited = stack.Pop();
+                }
+            }
         }
     }
 }
@@ -63,7 +97,7 @@ public static class BinaryTreeExtensions
         {
             return Array.Empty<T>();
         }
-      
+
         List<T> result = new List<T>();
         Action<BinaryTreeNode<T>> traverse = null;
         traverse = (node) =>
@@ -90,17 +124,20 @@ public class Program
 
         BinaryTree<int> tree = new BinaryTree<int>(root);
 
-        foreach (var nodeValue in tree)
+        Console.WriteLine("Прямой обход дерева:");
+        foreach (var nodeValue in tree.PreOrderTraversal())
         {
             Console.Write(nodeValue + " ");
         }
         Console.WriteLine();
 
-        var inOrderTraversalValues = BinaryTreeExtensions.LambdaInOrderTraversal(root);
-        foreach (var nodeValue in inOrderTraversalValues)
+        Console.WriteLine("Обратный обход дерева:");
+        foreach (var nodeValue in tree.PostOrderTraversal())
         {
             Console.Write(nodeValue + " ");
         }
+        Console.WriteLine();
+
         Console.ReadKey();
     }
 }
