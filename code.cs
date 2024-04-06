@@ -12,6 +12,26 @@ public class BinaryTreeNode<T>
     {
         Value = value;
     }
+
+    public static BinaryTreeNode<T> operator ++(BinaryTreeNode<T> node)
+    {
+        if (node != null)
+        {
+            dynamic dynamicValue = node.Value;
+            node.Value = dynamicValue + 1;
+        }
+        return node;
+    }
+
+    public static BinaryTreeNode<T> operator --(BinaryTreeNode<T> node)
+    {
+        if (node != null)
+        {
+            dynamic dynamicValue = node.Value;
+            node.Value = dynamicValue - 1;
+        }
+        return node;
+    }
 }
 
 public class BinaryTree<T> : IEnumerable<T>
@@ -124,6 +144,8 @@ public class Program
 
         BinaryTree<int> tree = new BinaryTree<int>(root);
 
+        ++root.Left.Left;
+
         Console.WriteLine("Прямой обход дерева:");
         foreach (var nodeValue in tree.PreOrderTraversal())
         {
@@ -131,13 +153,14 @@ public class Program
         }
         Console.WriteLine();
 
+        --root.Right;
+
         Console.WriteLine("Обратный обход дерева:");
         foreach (var nodeValue in tree.PostOrderTraversal())
         {
             Console.Write(nodeValue + " ");
         }
         Console.WriteLine();
-
         Console.ReadKey();
     }
 }
