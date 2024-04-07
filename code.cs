@@ -131,6 +131,35 @@ public class PostOrderIterator<T> : IEnumerator<T>
         }
     }
 
+    public void Previous()
+    {
+        if (current == null)
+            return;
+        if (current.Left != null)
+        {
+            current = current.Left;
+            while (current.Right != null)
+            {
+                current = current.Right;
+            }
+        }
+        else
+        {
+            while (current != null && current.Left == null)
+            {
+                current = current.Left;
+            }
+            if (current != null)
+            {
+                current = current.Left;
+                while (current.Right != null)
+                {
+                    current = current.Right;
+                }
+            }
+        }
+    }
+
     public void Reset()
     {
         throw new Exception();
