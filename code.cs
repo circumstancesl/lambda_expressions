@@ -12,100 +12,128 @@ public class BinaryTreeNode<T>
     {
         Value = value;
     }
-
-    public static BinaryTreeNode<T> operator ++(BinaryTreeNode<T> node)
-    {
-        if (node != null)
-        {
-            dynamic dynamicValue = node.Value;
-            node.Value = dynamicValue + 1;
-        }
-        return node;
-    }
-
-    public static BinaryTreeNode<T> operator --(BinaryTreeNode<T> node)
-    {
-        if (node != null)
-        {
-            dynamic dynamicValue = node.Value;
-            node.Value = dynamicValue - 1;
-        }
-        return node;
-    }
 }
 
 public class BinaryTree<T> : IEnumerable<T>
 {
     private BinaryTreeNode<T> root;
+    private Func<BinaryTreeNode<T>, IEnumerator<T>> traversalStrategy;
 
-    public BinaryTree(BinaryTreeNode<T> root)
+    public BinaryTree(BinaryTreeNode<T> root, Func<BinaryTreeNode<T>, IEnumerator<T>> traversalStrategy)
     {
         this.root = root;
+        this.traversalStrategy = traversalStrategy;
     }
 
     public IEnumerator<T> GetEnumerator()
     {
-        return PreOrderTraversal().GetEnumerator();
+        return traversalStrategy(root);
     }
 
     IEnumerator IEnumerable.GetEnumerator()
     {
         return GetEnumerator();
     }
+}
 
-    public IEnumerable<T> PreOrderTraversal()
+public class PreOrderIterator<T> : IEnumerator<T>
+{
+    private Stack<BinaryTreeNode<T>> stack;
+
+    public PreOrderIterator(BinaryTreeNode<T> root)
     {
-        if (root == null) yield break;
-
-        Stack<BinaryTreeNode<T>> stack = new Stack<BinaryTreeNode<T>>();
-        stack.Push(root);
-
-        while (stack.Count > 0)
+        stack = new Stack<BinaryTreeNode<T>>();
+        if (root != null)
         {
-            BinaryTreeNode<T> current = stack.Pop();
-            yield return current.Value;
+            stack.Push(root);
+        }
+    }
 
-            if (current.Right != null)
+    public T Current { get; set; }
+
+    object IEnumerator.Current => Current;
+
+    public void Dispose() {}
+
+    public bool MoveNext()
+    {
+        if (stack.Count == 0)
+        {
+            return false;
+        }
+
+        BinaryTreeNode<T> current = stack.Pop();
+        Current = current.Value;
+
+        if (current.Right != null)
+        {
+            stack.Push(current.Right);
+        }
+        if (current.Left != null)
+        {
+            stack.Push(current.Left);
+        }
+
+        return true;
+    }
+
+    public void Reset()
+    {
+        throw new Exception();
+    }
+}
+
+public class PostOrderIterator<T> : IEnumerator<T>
+{
+    private Stack<BinaryTreeNode<T>> stack;
+    private BinaryTreeNode<T> current;
+
+    public PostOrderIterator(BinaryTreeNode<T> root)
+    {
+        stack = new Stack<BinaryTreeNode<T>>();
+        current = root;
+    }
+
+    public T Current { get; set; }
+
+    object IEnumerator.Current => Current;
+
+    public void Dispose() {}
+
+    public bool MoveNext()
+    {
+        while (true)
+        {
+            while (current != null)
             {
-                stack.Push(current.Right);
+                stack.Push(current);
+                stack.Push(current);
+                current = current.Left;
             }
 
-            if (current.Left != null)
+            if (stack.Count == 0)
             {
-                stack.Push(current.Left);
+                return false;
+            }
+
+            current = stack.Pop();
+
+            if (stack.Count > 0 && stack.Peek() == current)
+            {
+                current = current.Right;
+            }
+            else
+            {
+                Current = current.Value;
+                current = null;
+                return true;
             }
         }
     }
 
-    public IEnumerable<T> PostOrderTraversal()
+    public void Reset()
     {
-        if (root == null) yield break;
-
-        Stack<BinaryTreeNode<T>> stack = new Stack<BinaryTreeNode<T>>();
-        BinaryTreeNode<T> current = root;
-        BinaryTreeNode<T> lastNodeVisited = null;
-
-        while (stack.Count > 0 || current != null)
-        {
-            if (current != null)
-            {
-                stack.Push(current);
-                current = current.Left;
-            }
-            else
-            {
-                BinaryTreeNode<T> peekNode = stack.Peek();
-                if (peekNode.Right != null && lastNodeVisited != peekNode.Right)
-                {
-                    current = peekNode.Right;
-                }
-                else
-                {
-                    yield return peekNode.Value;
-                    lastNodeVisited = stack.Pop();
-                }
-            }
-        }
+        throw new Exception();
     }
 }
 
@@ -142,25 +170,29 @@ public class Program
         root.Left.Left = new BinaryTreeNode<int>(4);
         root.Left.Right = new BinaryTreeNode<int>(5);
 
-        BinaryTree<int> tree = new BinaryTree<int>(root);
-
-        ++root.Left.Left;
-
+        BinaryTree<int> preOrderTree = new BinaryTree<int>(root, (r) => new PreOrderIterator<int>(r));
         Console.WriteLine("Прямой обход дерева:");
-        foreach (var nodeValue in tree.PreOrderTraversal())
+        foreach (var nodeValue in preOrderTree)
         {
             Console.Write(nodeValue + " ");
         }
         Console.WriteLine();
 
-        --root.Right;
-
+        BinaryTree<int> postOrderTree = new BinaryTree<int>(root, (r) => new PostOrderIterator<int>(r));
         Console.WriteLine("Обратный обход дерева:");
-        foreach (var nodeValue in tree.PostOrderTraversal())
+        foreach (var nodeValue in postOrderTree)
         {
             Console.Write(nodeValue + " ");
         }
         Console.WriteLine();
+
+        var inOrderTraversalValues = BinaryTreeExtensions.LambdaInOrderTraversal(root);
+        Console.WriteLine("Прямой обход дерева:");
+        foreach (var nodeValue in inOrderTraversalValues)
+        {
+            Console.Write(nodeValue + " ");
+        }
+
         Console.ReadKey();
     }
 }
