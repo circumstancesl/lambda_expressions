@@ -39,6 +39,7 @@ public class BinaryTree<T> : IEnumerable<T>
 public class PreOrderIterator<T> : IEnumerator<T>
 {
     private Stack<BinaryTreeNode<T>> stack;
+    private BinaryTreeNode<T> current;
 
     public PreOrderIterator(BinaryTreeNode<T> root)
     {
@@ -75,6 +76,35 @@ public class PreOrderIterator<T> : IEnumerator<T>
         }
 
         return true;
+    }
+
+    public void Previous()
+    {
+        if (current == null)
+            return;
+        if (current.Left != null)
+        {
+            current = current.Left;
+            while (current.Right != null)
+            {
+                current = current.Right;
+            }
+        }
+        else
+        {
+            while (current != null && current.Left == null)
+            {
+                current = current.Left;
+            }
+            if (current != null)
+            {
+                current = current.Left;
+                while (current.Right != null)
+                {
+                    current = current.Right;
+                }
+            }
+        }
     }
 
     public void Reset()
